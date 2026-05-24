@@ -89,9 +89,8 @@ python main.py
 
 | Command | Description |
 |----------|-------------|
-| `add` | Add quick reply |
+| `add` | Mark user as customer |
 | `همگانی` | Send public message |
-| `customer` | Mark user as customer |
 
 ---
 
