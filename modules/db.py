@@ -1,30 +1,68 @@
-import sqlite3
-class DB_Controller:
-    def __init__(self):
-        self.conn = sqlite3.connect("database.db")
-        self.c = self.conn.cursor()
+import aiosqlite
 
-    def handle_user(self, user_id):
-        is_exist = self.c.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
-        if is_exist is None:
-            self.c.execute("INSERT INTO users VALUES (?, ?, ?)", (user_id, 0 ,0,))
-            self.conn.commit()
-            return True
-        else:
+
+class DBController:
+    def __init__(self, db_path="database.db"):
+        self.db_path = db_path
+
+    async def handle_user(self, user_id: int):
+        async with aiosqlite.connect(self.db_path) as db:
+
+            cursor = await db.execute(
+                "SELECT * FROM users WHERE user_id = ?",
+                (user_id,)
+            )
+
+            is_exist = await cursor.fetchone()
+
+            if is_exist is None:
+                await db.execute(
+                    "INSERT INTO users VALUES (?, ?, ?)",
+                    (user_id, 0, 0)
+                )
+
+                await db.commit()
+                return True
+
             return False
-        
-    def handle_test(self, user_id):
-        is_first_time = self.c.execute("SELECT is_test FROM users WHERE user_id = ?", (user_id,)).fetchone()
-        if is_first_time[0] == 0:
-            self.c.execute("UPDATE users SET is_test = 1 WHERE user_id = ?", (user_id,))
-            self.conn.commit()
-            return True
-        else:
+
+    async def handle_test(self, user_id: int):
+        async with aiosqlite.connect(self.db_path) as db:
+
+            cursor = await db.execute(
+                "SELECT is_test FROM users WHERE user_id = ?",
+                (user_id,)
+            )
+
+            is_first_time = await cursor.fetchone()
+
+            if is_first_time and is_first_time[0] == 0:
+
+                await db.execute(
+                    "UPDATE users SET is_test = 1 WHERE user_id = ?",
+                    (user_id,)
+                )
+
+                await db.commit()
+                return True
+
             return False
-        
-    def add_customer(self, user_id):
-        self.c.execute("UPDATE users SET is_customer = 1 WHERE user_id = ?", (user_id,))
-        self.conn.commit()
-        
-    def get_customers(self):
-        return self.c.execute("SELECT user_id FROM users WHERE is_customer = 1").fetchall()
+
+    async def add_customer(self, user_id: int):
+        async with aiosqlite.connect(self.db_path) as db:
+
+            await db.execute(
+                "UPDATE users SET is_customer = 1 WHERE user_id = ?",
+                (user_id,)
+            )
+
+            await db.commit()
+
+    async def get_customers(self):
+        async with aiosqlite.connect(self.db_path) as db:
+
+            cursor = await db.execute(
+                "SELECT user_id FROM users WHERE is_customer = 1"
+            )
+
+            return await cursor.fetchall()
